@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>JPG → WEBP (and other formats) — Image Converter</title>
+  <meta name="description" content="Simple JPG to WEBP and image converter — upload, preview, compress and download. Fully responsive. Bright blue & white theme.">
+  <style>
+    :root{
+      --blue:#007BFF; /* bright blue */
+      --blue-600:#1E90FF;
+      --bg:#ffffff;
+      --muted:#6b7280;
+      --radius:12px;
+      --glass: rgba(255,255,255,0.75);
+      --shadow: 0 6px 24px rgba(3,27,80,0.08);
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#f7fbff);color:#0f172a}
+    .container{max-width:1100px;margin:28px auto;padding:20px}
+    header{display:flex;gap:12px;align-items:center;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:52px;height:52px;border-radius:12px;background:var(--blue);display:grid;place-items:center;color:#fff;font-weight:700;box-shadow:var(--shadow)}
+    h1{font-size:20px;margin:0}
+    p.lead{margin:0;color:var(--muted);font-size:14px}
+
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.9),#fff);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+    .grid{display:grid;grid-template-columns:1fr 420px;gap:18px}
+
+    /* left column */
+    .uploader{display:flex;flex-direction:column;gap:12px}
+    .dropzone{border:2px dashed rgba(0,123,255,0.22);border-radius:12px;padding:18px;display:flex;gap:12px;align-items:center;justify-content:center;flex-direction:column;min-height:220px;background:linear-gradient(180deg,rgba(30,144,255,0.03),transparent)}
+    .dropzone.drag{background:rgba(30,144,255,0.04);border-color:var(--blue)}
+    .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    input[type=file]{display:none}
+    .btn{background:var(--blue);color:#fff;padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:600}
+    .btn.secondary{background:#fff;color:var(--blue);border:1px solid rgba(0,123,255,0.14)}
+
+    .options{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+    label.small{font-size:13px;color:var(--muted)}
+    select,input[type=range],input[type=number]{width:100%;padding:8px;border-radius:8px;border:1px solid #e6eef9;background:#fff}
+    .row{display:flex;gap:8px}
+    .row .col{flex:1}
+
+    /* preview column */
+    .preview{display:flex;flex-direction:column;gap:12px}
+    .preview img{max-width:100%;border-radius:10px;display:block}
+    .meta{font-size:13px;color:var(--muted)}
+    .download-row{display:flex;gap:8px;align-items:center}
+
+    footer{margin-top:14px;color:var(--muted);font-size:13px}
+
+    /* responsiveness */
+    @media (max-width:920px){
+      .grid{grid-template-columns:1fr;}
+      .card{padding:14px}
+      .logo{width:44px;height:44px}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">AI</div>
+        <div>
+          <h1>Image Converter — JPG → WEBP & More</h1>
+          <p class="lead">Upload, preview, compress and download images. Fast, client-side and mobile-friendly.</p>
+        </div>
+      </div>
+    </header>
+
+    <div class="card">
+      <div class="grid">
+        <div class="uploader">
+          <div id="drop" class="dropzone">
+            <div style="text-align:center;max-width:420px">
+              <strong id="dz-text">Drag & drop an image here or</strong>
+              <div style="margin-top:8px">
+                <label class="btn" for="fileInput">Choose Image</label>
+                <input id="fileInput" type="file" accept="image/*">
+              </div>
+              <div style="margin-top:10px;color:var(--muted);font-size:13px">Supported: JPG, PNG, BMP, GIF (static). Animated GIFs will be converted as a single frame.</div>
+            </div>
+          </div>
+
+          <div class="options">
+            <div>
+              <label class="small">Output Format</label>
+              <select id="formatSelect">
+                <option value="image/webp">WEBP (recommended)</option>
+                <option value="image/jpeg">JPG / JPEG</option>
+                <option value="image/png">PNG (lossless)</option>
+                <option value="image/avif">AVIF (if supported)</option>
+              </select>
+            </div>
+
+            <div class="row">
+              <div class="col">
+                <label class="small">Quality (<span id="qVal">0.85</span>)</label>
+                <input id="quality" type="range" min="0.1" max="1" step="0.01" value="0.85">
+              </div>
+              <div style="width:110px">
+                <label class="small">Scale (%)</label>
+                <input id="scale" type="number" min="10" max="200" value="100">
+              </div>
+            </div>
+
+            <div>
+              <label class="small">Advanced</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button id="convertBtn" class="btn">Convert & Compress</button>
+                <button id="resetBtn" class="btn secondary">Reset</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:6px">
+            <small class="meta">Note: Conversion happens locally in your browser — no image leaves your device.</small>
+          </div>
+        </div>
+
+        <aside class="preview">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <strong>Preview</strong>
+            <div class="meta" id="status">No image loaded</div>
+          </div>
+
+          <div id="previewBox" style="min-height:220px;border-radius:10px;border:1px solid #eef6ff;padding:10px;display:grid;place-items:center;background:#f8fbff">
+            <!-- previews inserted here -->
+            <div id="empty" style="text-align:center;color:var(--muted)">Original and converted preview will appear here.</div>
+          </div>
+
+          <div class="meta" id="sizes" style="display:none">
+            <div>Original: <span id="origSize"></span> · Converted: <span id="convSize"></span></div>
+            <div id="dim"></div>
+          </div>
+
+          <div class="download-row" style="display:none" id="downloadRow">
+            <a id="downloadLink" class="btn" download>Download Converted</a>
+            <button id="previewFull" class="btn secondary">Open in New Tab</button>
+          </div>
+
+        </aside>
+      </div>
+
+      <footer>
+        <div>Made for your multi-tool website — bright blue & white UI. Works fully client-side.</div>
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    // Elements
+    const fileInput = document.getElementById('fileInput');
+    const drop = document.getElementById('drop');
+    const dzText = document.getElementById('dz-text');
+    const formatSelect = document.getElementById('formatSelect');
+    const qualityRange = document.getElementById('quality');
+    const qVal = document.getElementById('qVal');
+    const scaleInput = document.getElementById('scale');
+    const convertBtn = document.getElementById('convertBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const previewBox = document.getElementById('previewBox');
+    const status = document.getElementById('status');
+    const sizes = document.getElementById('sizes');
+    const origSize = document.getElementById('origSize');
+    const convSize = document.getElementById('convSize');
+    const dim = document.getElementById('dim');
+    const downloadRow = document.getElementById('downloadRow');
+    const downloadLink = document.getElementById('downloadLink');
+    const previewFull = document.getElementById('previewFull');
+
+    let originalFile = null;
+    let originalImage = null;
+    let convertedBlob = null;
+
+    // helpers
+    function humanFileSize(bytes) {
+      if (bytes === 0) return '0 B';
+      const i = Math.floor(Math.log(bytes) / Math.log(1024));
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      return (bytes / Math.pow(1024, i)).toFixed(2) + ' ' + sizes[i];
+    }
+
+    function clearPreview(){
+      previewBox.innerHTML = '<div id="empty" style="text-align:center;color:var(--muted)">Original and converted preview will appear here.</div>';
+      status.textContent = 'No image loaded';
+      sizes.style.display = 'none';
+      downloadRow.style.display = 'none';
+      originalFile = null;
+      originalImage = null;
+      convertedBlob = null;
+      downloadLink.removeAttribute('href');
+    }
+
+    function showOriginalPreview(imgSrc){
+      previewBox.innerHTML = '';
+      const wrapper = document.createElement('div');
+      wrapper.style.width = '100%';
+      wrapper.style.display = 'grid';
+      wrapper.style.gridTemplateColumns = '1fr 1fr';
+      wrapper.style.gap = '8px';
+
+      const origCont = document.createElement('div');
+      const convCont = document.createElement('div');
+      origCont.style.textAlign = 'center';
+      convCont.style.textAlign = 'center';
+      const origTitle = document.createElement('div'); origTitle.textContent = 'Original'; origTitle.style.fontWeight='600'; origTitle.style.marginBottom='6px';
+      const convTitle = document.createElement('div'); convTitle.textContent = 'Converted'; convTitle.style.fontWeight='600'; convTitle.style.marginBottom='6px';
+
+      const origImg = document.createElement('img'); origImg.src = imgSrc; origImg.alt='original'; origImg.style.maxHeight='320px'; origImg.style.objectFit='contain';
+      const convImg = document.createElement('img'); convImg.id='convPreview'; convImg.alt='converted'; convImg.style.maxHeight='320px'; convImg.style.objectFit='contain';
+
+      origCont.appendChild(origTitle); origCont.appendChild(origImg);
+      convCont.appendChild(convTitle); convCont.appendChild(convImg);
+
+      wrapper.appendChild(origCont); wrapper.appendChild(convCont);
+      previewBox.appendChild(wrapper);
+    }
+
+    // Drag & Drop
+    ['dragenter','dragover'].forEach(evt=>{
+      drop.addEventListener(evt, e=>{e.preventDefault();e.stopPropagation();drop.classList.add('drag');dzText.textContent='Drop image to upload';});
+    });
+    ['dragleave','drop'].forEach(evt=>{
+      drop.addEventListener(evt, e=>{e.preventDefault();e.stopPropagation();drop.classList.remove('drag');dzText.textContent='Drag & drop an image here or';});
+    });
+    drop.addEventListener('drop', e=>{
+      const dt = e.dataTransfer;
+      if(dt && dt.files && dt.files.length) handleFile(dt.files[0]);
+    });
+
+    // File input
+    fileInput.addEventListener('change', e=>{
+      if (fileInput.files && fileInput.files[0]) handleFile(fileInput.files[0]);
+    });
+
+    // Quality display
+    qualityRange.addEventListener('input', ()=>{ qVal.textContent = qualityRange.value; });
+
+    // Convert action
+    convertBtn.addEventListener('click', ()=>{
+      if(!originalImage) { alert('Please upload an image first.'); return; }
+      convertImage();
+    });
+
+    resetBtn.addEventListener('click', ()=>{ clearPreview(); fileInput.value=''; });
+
+    previewFull.addEventListener('click', ()=>{
+      if(!convertedBlob) return;
+      const url = URL.createObjectURL(convertedBlob);
+      window.open(url, '_blank');
+    });
+
+    // handle file
+    function handleFile(file){
+      if(!file.type.startsWith('image/')){ alert('Please upload a valid image file.'); return; }
+      originalFile = file;
+      status.textContent = 'Loading image...';
+      const reader = new FileReader();
+      reader.onload = e => {
+        const src = e.target.result;
+        const img = new Image();
+        img.onload = () => {
+          originalImage = img;
+          showOriginalPreview(src);
+          status.textContent = 'Image ready';
+          sizes.style.display = 'block';
+          origSize.textContent = humanFileSize(file.size);
+          dim.textContent = `Dimensions: ${img.width} × ${img.height}px`;
+          downloadRow.style.display = 'none';
+          convertedBlob = null;
+        };
+        img.onerror = ()=>{ alert('Failed to read image.'); status.textContent='Error loading image'; }
+        img.src = src;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // core conversion
+    function convertImage(){
+      const fmt = formatSelect.value || 'image/webp';
+      const quality = parseFloat(qualityRange.value);
+      const scale = Math.max(10, Math.min(200, parseInt(scaleInput.value)||100))/100;
+
+      const w = Math.max(1, Math.round(originalImage.width * scale));
+      const h = Math.max(1, Math.round(originalImage.height * scale));
+
+      // create canvas
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+
+      // draw with smoothing
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(originalImage, 0, 0, w, h);
+
+      status.textContent = 'Converting...';
+      // toBlob for binary
+      const mime = fmt;
+      // fallback if browser doesn't support requested mime: try webp then jpeg
+      function tryToBlob(typeToTry, q){
+        return new Promise((resolve)=>{
+          if(!canvas.toBlob){
+            // older browsers fallback to dataURL
+            const dataURL = canvas.toDataURL(typeToTry, q);
+            const blob = dataURLToBlob(dataURL);
+            resolve(blob);
+            return;
+          }
+          try{
+            canvas.toBlob(blob=>{
+              resolve(blob);
+            }, typeToTry, q);
+          }catch(e){
+            // if toBlob throws, try dataURL fallback
+            const dataURL = canvas.toDataURL(typeToTry, q);
+            const blob = dataURLToBlob(dataURL);
+            resolve(blob);
+          }
+        });
+      }
+
+      tryToBlob(mime, quality).then(blob=>{
+        if(!blob){ // attempt fallback to jpeg
+          return tryToBlob('image/jpeg', quality);
+        }
+        return blob;
+      }).then(finalBlob=>{
+        if(!finalBlob){ alert('Conversion failed: your browser may not support the selected format.'); status.textContent='Conversion failed'; return; }
+        convertedBlob = finalBlob;
+        const convURL = URL.createObjectURL(finalBlob);
+        const convPreviewImg = document.getElementById('convPreview');
+        if(convPreviewImg) convPreviewImg.src = convURL;
+        downloadLink.href = convURL;
+        const outName = (originalFile && originalFile.name) ? originalFile.name.replace(/\.[^/.]+$/, '') : 'converted-image';
+        // extension from mime
+        const ext = mime.split('/')[1] || 'webp';
+        downloadLink.download = outName + '.' + ext;
+        downloadRow.style.display = 'flex';
+        convSize.textContent = humanFileSize(finalBlob.size);
+        sizes.style.display = 'block';
+        status.textContent = 'Conversion complete';
+
+        // update sizes
+        origSize.textContent = humanFileSize(originalFile.size);
+        dim.textContent = `Dimensions: ${originalImage.width} × ${originalImage.height}px → ${w} × ${h}px`;
+      }).catch(err=>{
+        console.error(err);
+        alert('An error occurred during conversion.');
+        status.textContent = 'Error';
+      });
+    }
+
+    // small util: dataURL -> blob
+    function dataURLToBlob(dataurl) {
+      const arr = dataurl.split(',');
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+      return new Blob([u8arr], {type:mime});
+    }
+
+    // init
+    clearPreview();
+  </script>
+</body>
+</html>
