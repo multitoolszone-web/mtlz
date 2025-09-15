@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tools Wonder — Your Daily Tools, All in One Place</title>
+
+  <!-- FontAwesome for icons (optional) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/styles2.css" />
+  <link rel="stylesheet" href="css/imagecompressor.css" />
+
+</head>
+<body>
+
+  <!-- placeholders for shared header/footer -->
+  <div id="site-header"></div>
+    
+<main class="container">
+    <section class="tool-wrap">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div>
+          <h2 style="margin:0">Image Compressor</h2>
+          <p class="muted" style="margin:6px 0 0">Upload an image, adjust quality/resize, preview and download the compressed version.</p>
+        </div>
+        <div class="muted">Supports: JPG, PNG, WebP, AVIF</div>
+      </div>
+
+      <div class="tool-grid">
+        <!-- Controls -->
+        <div class="panel">
+          <label class="drop" id="dropZone">
+            <input type="file" id="fileInput" accept="image/*">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+              <i class="fas fa-image" style="font-size:28px;color:var(--primary-blue)"></i>
+              <div style="font-weight:600">Click to select or drag & drop image</div>
+              <div class="muted">Max file size: 12MB</div>
+            </div>
+          </label>
+
+          <div class="options">
+            <div class="row">
+              <label>Output format</label>
+              <select id="formatSelect">
+                <option value="image/webp">WebP (.webp)</option>
+                <option value="image/jpeg">JPEG (.jpg)</option>
+                <option value="image/png">PNG (.png)</option>
+                <option value="image/avif">AVIF (.avif)</option>
+              </select>
+            </div>
+
+            <div class="row">
+              <label>Quality</label>
+              <input type="range" id="qualityRange" min="0.1" max="1" step="0.05" value="0.75">
+            </div>
+
+            <div class="row">
+              <label>Resize width</label>
+              <input type="number" id="resizeWidth" placeholder="width px (optional)">
+            </div>
+
+            <div style="display:flex;gap:10px;margin-top:6px">
+              <button class="btn" id="compressBtn"><i class="fas fa-compress"></i> Compress</button>
+              <button class="secondary" id="resetBtn"><i class="fas fa-undo"></i> Reset</button>
+            </div>
+
+            <div style="margin-top:8px"><small class="muted">Tip: Lower quality + resizing give the best file reduction. Use WebP/AVIF for modern browsers.</small></div>
+          </div>
+
+          <div style="margin-top:16px">
+            <h4 style="margin:6px 0">How to compress images?</h4>
+            <pre class="tips">1. Lossy compression (JPEG/WebP/AVIF): reduces quality to shrink size.
+2. Resize dimensions: reduce width/height to lower pixel count.
+3. Reduce color depth or remove metadata (EXIF).
+4. Use modern formats (WebP/AVIF) for better quality/size tradeoff.
+5. Server-side tools: sharp, imagemagick, or imagemin for batch processing.</pre>
+          </div>
+        </div>
+
+        <!-- Preview -->
+        <div class="panel preview" id="previewPanel">
+          <div style="width:100%;display:flex;justify-content:space-between;align-items:center">
+            <div class="meta">
+              <div class="muted" id="fileName">No image selected</div>
+            </div>
+            <div>
+              <button class="secondary" id="downloadOriginal" style="display:none"><i class="fas fa-download"></i> Download Original</button>
+            </div>
+          </div>
+
+          <div style="width:100%;display:flex;justify-content:center;align-items:center;min-height:220px">
+            <img id="previewImg" alt="preview" src="" style="display:none">
+          </div>
+
+          <div style="width:100%;display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:6px">
+            <div class="muted" id="fileSize">—</div>
+            <div class="muted" id="imageDim">—</div>
+          </div>
+
+          <div style="width:100%;display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+            <button class="btn" id="downloadCompressed" style="display:none"><i class="fas fa-download"></i> Download Compressed</button>
+            <button class="secondary" id="openTab" style="display:none">Open in new tab</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <!-- shared loader -->
+  <script src="js/site.js"></script>
+
+  <!-- page-specific small script: live search for tool cards -->
+  <script>
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const toolCards = Array.from(document.querySelectorAll('.tool-card'));
+
+    function filterTools(term) {
+      term = (term || '').trim().toLowerCase();
+      if (!term) {
+        toolCards.forEach(c => c.style.display = '');
+        return;
+      }
+      toolCards.forEach(card => {
+        const keys = (card.dataset.keywords || '') + ' ' + (card.querySelector('h3')?.textContent || '');
+        card.style.display = keys.toLowerCase().includes(term) ? '' : 'none';
+      });
+    }
+
+    searchBtn.addEventListener('click', ()=> filterTools(searchInput.value));
+    searchInput.addEventListener('input', ()=> filterTools(searchInput.value));
+    searchInput.addEventListener('keydown', e => { if(e.key==='Enter') filterTools(searchInput.value); });
+  </script>
+
+  <!-- FontAwesome script for icons (optional) -->
+  <script src="https://kit.fontawesome.com/your-kit-id.js" crossorigin="anonymous"></script>
+</body>
+</html>
+s
